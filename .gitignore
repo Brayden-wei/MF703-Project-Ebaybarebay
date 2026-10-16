@@ -1,4 +1,3 @@
-# Python and local environment
 __pycache__/
 *.py[cod]
 .venv/
@@ -8,16 +7,16 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Local datasets and generated results
-data/raw/*
-!data/raw/.gitkeep
+# Track supplied Parquet shards and directory guides, not local CSV copies.
+data/raw/*.csv
+data/raw/btcusd_1-min_data.parquet
 data/processed/*
-!data/processed/.gitkeep
+!data/processed/README.md
 outputs/models/*
-!outputs/models/.gitkeep
+!outputs/models/README.md
 outputs/predictions/*
-!outputs/predictions/.gitkeep
+!outputs/predictions/README.md
 outputs/tables/*
-!outputs/tables/.gitkeep
+!outputs/tables/README.md
 outputs/figures/*
-!outputs/figures/.gitkeep
+!outputs/figures/README.md

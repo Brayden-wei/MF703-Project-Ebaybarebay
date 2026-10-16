@@ -1,105 +1,135 @@
-# MF703 BTC Price Prediction
+# MF703 BTC 预测项目
 
-本项目研究历史价格和成交量能否改善 BTC 未来十五分钟收益率预测，并将预测收益率转换成未来价格。当前仓库为项目骨架，模型和数据处理模块由组员逐步实现。
+使用 BTC 分钟级 OHLCV，研究历史信息对未来十五分钟对数收益率的预测能力，并将预测转换为价格。当前只提供原始 Parquet 数据、配置和文件夹说明；各负责人自行创建代码及 Notebook。
 
-## 文件夹结构
+## 文件夹用途与分工
 
-```text
-MF703-project/
-├── README.md                 # 项目说明、文件用途和协作方式
-├── requirements.txt          # 全组共用的 Python 依赖
-├── config.json               # 路径、预测期限、数据划分与随机种子
-├── .gitignore                # 忽略原始数据、生成文件与本地缓存
-├── data/
-│   ├── raw/                  # 原始 BTC 分钟 CSV，保留原样
-│   └── processed/            # 清洗数据、公共特征和样本划分
-├── src/
-│   ├── __init__.py
-│   ├── data.py               # 数据读取、清洗、时间对齐和划分
-│   ├── features.py           # 公共特征与未来十五分钟目标
-│   ├── baselines.py          # 零收益率和历史均值基准
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── ar.py             # AR 专属处理、训练和预测
-│   │   ├── ridge.py          # Ridge 专属处理、训练和预测
-│   │   └── lightgbm.py       # LightGBM 专属处理、训练和预测
-│   ├── evaluation.py         # 统一 RMSE、MAE、Pearson 与改善率
-│   └── backtest.py           # 交易执行、手续费、滑点和风险评价
-├── notebooks/
-│   ├── data_exploration.ipynb # 数据与特征探索
-│   ├── ar_experiments.ipynb   # AR 个人实验
-│   ├── ridge_experiments.ipynb# Ridge 个人实验
-│   ├── lgbm_experiments.ipynb # LightGBM 个人实验
-│   └── main.ipynb             # 最终统一运行和展示入口
-└── outputs/
-    ├── models/               # 训练后的模型和预处理参数
-    ├── predictions/          # 各模型按时间对齐的预测
-    ├── tables/               # 模型比较、消融与回测表格
-    └── figures/              # 预测、特征重要性、净值与回撤图
+| 目录 | 放什么 | 负责人 |
+|---|---|---|
+| `data/` | 数据管理说明 | 数据与特征负责人 |
+| `data/raw/` | 原始分钟数据的八个 Parquet 分片及读取说明，保留原样 | 数据与特征负责人 |
+| `data/processed/` | 清洗数据、公共特征、目标和时间划分 | 数据与特征负责人 |
+| `src/` | 正式的数据处理、基准、统一评价和回测代码 | 数据负责人及组内集成人 |
+| `src/models/` | AR、Ridge、LightGBM 的专属处理、训练和预测代码 | 三位模型负责人 |
+| `notebooks/` | 个人实验及最终展示 Notebook，由负责人自行创建 | 全体成员 |
+| `outputs/` | 生成结果的分类管理说明 | 全体成员 |
+| `outputs/models/` | 模型和训练期拟合的预处理器 | 模型负责人 |
+| `outputs/predictions/` | 按日期对齐的基准及模型预测文件 | 模型负责人 |
+| `outputs/tables/` | 比较、消融、分时期和回测表格 | 集成人 |
+| `outputs/figures/` | 预测、特征重要性、净值和回撤图 | 全体成员 |
+
+每个目录的 README.md 说明具体存放规则。不预建 `.py` 或 `.ipynb`，文件命名和代码实现由负责人安排。公共数据修正由数据负责人统一完成；模型专属标准化、滞后项和特征处理由模型负责人维护，不覆盖原始或公共数据。
+
+## 数据获取与读取
+
+仓库 `data/raw/` 已包含 `btcusd_1-min_data.part-000.parquet` 至 `part-007.parquet`，可以随 Code → Download ZIP 一次下载。源文件为 btcusd_1-min_data.csv，共 7,206,877 行，字段为 Timestamp、Open、High、Low、Close、Volume。
+
+这是格式转换，没有进行清洗、采样、特征计算或精度缩减。原始单文件压缩后仍约 109 MiB，故按原始行序每一百万行分片，最后一片为余下记录；共八片。不要只读取其中一片作为完整数据。
+
+```python
+from pathlib import Path
+import pandas as pd
+
+# 从项目根目录运行；Notebook 中请先确定项目根路径。
+raw_dir = Path('data/raw')
+parts = sorted(raw_dir.glob('btcusd_1-min_data.part-*.parquet'))
+df = pd.concat([pd.read_parquet(path) for path in parts], ignore_index=True)
+df['datetime'] = pd.to_datetime(df['Timestamp'], unit='s', utc=True)
 ```
 
-`.gitkeep` 只用于保留空文件夹；实际数据和结果生成后无需修改它。
+## 预测目标
 
-## 四人分工
+令 $P_t$ 为时点 $t$ 已完成分钟线的收盘价。预测未来十五分钟的对数收益率：
 
-| 负责人 | 主要文件 | 任务 |
+$$
+y_t=\ln\left(\frac{P_{t+15}}{P_t}\right)
+$$
+
+模型输出 $\hat y_t$ 后，转换为预测价格和普通收益率：
+
+$$
+\hat P_{t+15}=P_t\exp(\hat y_t),\qquad
+\hat r_t=\exp(\hat y_t)-1
+$$
+
+对数收益率与普通收益率不同；二者在变化很小时近似相等。模型训练、RMSE、MAE 和 Pearson 均统一使用对数收益率，不能混用。对数收益率没有百分比单位，0.001 在小幅变化下约对应 0.1% 的普通收益率。
+
+每十五分钟形成一次预测。仅使用当时已经完成的数据；按真实时间配对目标，不能跨缺口直接移动十五行。
+
+## 统计评判标准与公式
+
+设 $N$ 为有效样本外预测数，$y_i$ 为真实对数收益率，$\hat y_i$ 为同一时点的预测；$\bar y$ 与 $\bar{\hat y}$ 分别为其均值。所有模型在相同预测日期评价。
+
+### 主要指标 RMSE
+
+$$
+\mathrm{RMSE}=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(\hat y_i-y_i)^2}
+$$
+
+越低越好，0 表示预测完全准确；较大的错误受到更大惩罚。它衡量对数收益率预测误差，不是利润或涨跌准确率。
+
+### 辅助指标 MAE
+
+$$
+\mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}|\hat y_i-y_i|
+$$
+
+越低越好，表示对数收益率的平均绝对误差，帮助识别 RMSE 是否受少量大误差影响。
+
+### 辅助指标 Pearson
+
+$$
+\rho=\frac{\sum_{i=1}^{N}(y_i-\bar y)(\hat y_i-\bar{\hat y})}{\sqrt{\sum_{i=1}^{N}(y_i-\bar y)^2}\sqrt{\sum_{i=1}^{N}(\hat y_i-\bar{\hat y})^2}}
+$$
+
+范围为 −1 至 1，越高表示正向线性关系越强，不保证幅度或方向准确。任一序列为常数时无定义，记 N/A，不记 0。
+
+### 相对基准的误差改善率
+
+$$
+\mathrm{Improvement}=\frac{\mathrm{RMSE}_{baseline}-\mathrm{RMSE}_{model}}{\mathrm{RMSE}_{baseline}}\times100\%
+$$
+
+零对数收益率基准恒预测 0，对应未来价格等于当前价格；其 Pearson 为 N/A。另设训练期平均对数收益率基准。改善率大于 0 表示超过基准；基准 RMSE 为 0 时改善率无定义。
+
+## 数据划分与比较规则
+
+| 阶段 | 训练数据 | 评价数据 |
 |---|---|---|
-| 数据与特征负责人 | `src/data.py`、`src/features.py` | 清洗、公共特征、目标和时间划分 |
-| AR 负责人 | `src/models/ar.py`、对应实验 Notebook | AR 序列处理、参数选择、预测 |
-| Ridge 负责人 | `src/models/ridge.py`、对应实验 Notebook | 标准化、正则化、训练和预测 |
-| LightGBM 负责人 | `src/models/lightgbm.py`、对应实验 Notebook | 专属处理、参数选择、训练和预测 |
+| 验证一 | 2017–2020 年 | 2021 年 |
+| 验证二 | 2017–2021 年 | 2022 年 |
+| 验证三 | 2017–2022 年 | 2023 年 |
+| 最终测试 | 2017–2023 年重训并冻结 | 2024 年起的有效记录 |
 
-`baselines.py`、`evaluation.py`、`backtest.py` 和 `main.ipynb` 由组内指定集成人维护。个人探索写入自己的 Notebook；最终计算逻辑整理进对应 Python 模块。不要同时修改别人的文件。
+样本起点是研究设计，需根据数据质量说明理由。每折预处理只在训练区拟合；训练标签结束时点必须早于验证起点。使用合并的样本外预测计算开发 RMSE，同时展示逐年表现。测试期不再选特征、调参或选择策略阈值。
 
-## 数据下载与放置
+模型比较：零收益、历史均值、AR、Ridge、LightGBM。Ridge 和 LightGBM 使用相同公共特征做基础比较；个人专属特征作为扩展实验并明确标记。初始特征建议分为历史收益、趋势与K线形态、成交量与波动率三组，做逐组消融。
 
-原始文件为 `btcusd_1-min_data.csv`，列为 Timestamp、Open、High、Low、Close、Volume。原始 CSV 不包含在代码仓库，也不会随 Download ZIP 自动下载。
-
-数据下载链接：**待数据负责人补充共享网盘链接**。
-
-1. 从共享链接下载原始 CSV。
-2. 将文件放在本地 `data/raw/btcusd_1-min_data.csv`。
-3. 数据负责人实现处理流程后，运行它生成 `data/processed/` 内容。处理后数据的具体文件名与格式在该模块完成时统一。
-
-模型负责人读取公共处理数据；标准化、AR 滞后项和其他模型专属处理写在自己的模型文件内，不覆盖公共数据。公共错误或新增公共特征由数据负责人统一修改。
-
-## 任务与统一评价
-
-- 目标为普通收益率 `y_t = Close_(t+15) / Close_t - 1`；预测价格为 `Close_t * (1 + y_pred)`。
-- 时间统一为 UTC；收益率使用小数，0.01 代表 1%。
-- 每十五分钟产生一次预测，仅使用当时已经完成的分钟线。
-- 主指标为收益率 RMSE，辅助为 MAE、Pearson。零收益率基准对应未来价格等于当前价格；常数预测的 Pearson 记 N/A。
-- 评价必须使用相同日期与目标，不能各自删掉难预测样本后比较。
-- 标准化和特征筛选只在对应训练窗口拟合；训练标签结束时间必须早于验证开始时间。
-- 开发区为 2017–2023 年，按年份向前验证；最终测试为 2024 年起的有效样本。最终方案冻结后使用测试集。
-
-预测 CSV 统一字段：
+统一预测文件字段如下，y_true 和 y_pred 均为对数收益率：
 
 ```text
 timestamp,target_end,model,y_true,y_pred,split
 ```
 
-## 安装与运行顺序
+## 金融评价
 
-建议全组使用 Python 3.11。初始依赖列于 requirements.txt；实现后统一记录可复现的版本。
+回测采用信号形成后的可执行价格，明确手续费、滑点和仓位规则，收益必须用实际执行区间的普通收益率计算，不直接累乘对数收益率。补充成本后累计收益、Sharpe 和最大回撤，与相同区间的买入并持有比较。
+
+## 组员上传方式
+
+组员接受仓库 Collaborator 邀请后，进入自己负责的目录，用 Add file → Upload files 上传代码。下载可使用 Code → Download ZIP，数据会随仓库下载。公共配置和接口改动先在组内同步。
+
+建议统一 Python 3.11，安装初始依赖：
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-计划运行顺序：读取清洗 → 公共特征及目标 → 基准与三个模型 → 统一评价 → 金融回测。`notebooks/main.ipynb` 为最终入口，目前仅有说明占位，尚未实现完整流水线。
+目前没有完整运行入口，由负责人实现后在本说明补充执行方式。初始依赖版本待实现后统一固定。
 
-## 最简网页上传方式
+## 参考
 
-1. 仓库所有者在 Settings → Collaborators 邀请组员，组员接受邀请。
-2. 组员通过 Code → Download ZIP 下载代码，并单独下载原始数据。
-3. 上传时先进入自己文件对应的目录，再用 Add file → Upload files 上传，确认目录和文件名正确。
-4. 更新自己的模块即可；涉及 config、公共接口或 main.ipynb 的修改先在组内同步。
-5. 更新已有本地项目时，只替换需要更新的代码，保留本地 data 与生成结果。
+- [Ridge 与 LightGBM 基础示例](https://www.kaggle.com/code/cookingfunda/crypto-return-prediction-ridge-lightgbm)
+- [第三名训练方案](https://www.kaggle.com/code/sugghi/training-3rd-place-solution)
 
-## 代码参考
-
-- [Crypto Return Prediction | Ridge + LightGBM](https://www.kaggle.com/code/cookingfunda/crypto-return-prediction-ridge-lightgbm)
-- [training 3rd place solution](https://www.kaggle.com/code/sugghi/training-3rd-place-solution)
-
-参考基础结构、特征构造和训练组织。项目使用自己的 BTC 数据与预测目标；不会直接复制竞赛的多币种残差目标或双向训练验证方式。采用参考代码时保留相应署名和许可说明。
+只借鉴合适的方法。项目采用自己的对数收益率目标、BTC 数据和只用过去训练的验证；采用公开代码时保留署名与许可说明。

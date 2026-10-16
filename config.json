@@ -1,13 +1,14 @@
 {
   "data": {
-    "raw_path": "data/raw/btcusd_1-min_data.csv",
     "processed_dir": "data/processed",
-    "timezone": "UTC"
+    "timezone": "UTC",
+    "raw_dir": "data/raw",
+    "raw_glob": "btcusd_1-min_data.part-*.parquet"
   },
   "task": {
     "horizon_minutes": 15,
     "sample_interval_minutes": 15,
-    "target": "simple_return"
+    "target": "log_return"
   },
   "split": {
     "development_start": "2017-01-01",
