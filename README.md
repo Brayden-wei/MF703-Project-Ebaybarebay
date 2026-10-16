@@ -87,10 +87,10 @@ $$
 ### 相对基准的误差改善率
 
 $$
-\mathrm{Improvement}=\frac{\mathrm{RMSE}_{baseline}-\mathrm{RMSE}_{model}}{\mathrm{RMSE}_{baseline}}\times100\%
+\mathrm{Improvement}=\frac{\mathrm{RMSE}_{baseline}-\mathrm{RMSE}_{model}}{\mathrm{RMSE}_{baseline}}\times100
 $$
 
-零对数收益率基准恒预测 0，对应未来价格等于当前价格；其 Pearson 为 N/A。另设训练期平均对数收益率基准。改善率大于 0 表示超过基准；基准 RMSE 为 0 时改善率无定义。
+改善率按百分数报告，例如数值 5 表示改善 5%。零对数收益率基准恒预测 0，对应未来价格等于当前价格；其 Pearson 为 N/A。另设训练期平均对数收益率基准。改善率大于 0 表示超过基准；基准 RMSE 为 0 时改善率无定义。
 
 ## 数据划分与比较规则
 
