@@ -1,0 +1,10 @@
+# Initial dependencies; pin versions after the team verifies its environment.
+numpy
+pandas
+pyarrow
+scikit-learn
+statsmodels
+lightgbm
+matplotlib
+seaborn
+jupyterlab
