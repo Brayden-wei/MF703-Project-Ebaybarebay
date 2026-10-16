@@ -17,14 +17,6 @@ MF703-Project-Ebaybarebay/
 │   ├── README.md                     # 数据目录说明
 │   ├── raw/                          # 原始数据，仅做格式转换，保留原样
 │   │   ├── README.md                 # 分片说明与合并读取示例
-│   │   ├── btcusd_1-min_data.part-000.parquet
-│   │   ├── btcusd_1-min_data.part-001.parquet
-│   │   ├── btcusd_1-min_data.part-002.parquet
-│   │   ├── btcusd_1-min_data.part-003.parquet
-│   │   ├── btcusd_1-min_data.part-004.parquet
-│   │   ├── btcusd_1-min_data.part-005.parquet
-│   │   ├── btcusd_1-min_data.part-006.parquet
-│   │   └── btcusd_1-min_data.part-007.parquet
 │   └── processed/                    # 后续放清洗数据、公共特征、目标与样本划分
 │       └── README.md
 │
