@@ -2,6 +2,71 @@
 
 使用 BTC 分钟级 OHLCV，研究历史信息对未来十五分钟对数收益率的预测能力，并将预测转换为价格。当前只提供原始 Parquet 数据、配置和文件夹说明；各负责人自行创建代码及 Notebook。
 
+## 项目目录结构
+
+下图展示仓库当前结构。除原始数据、配置与依赖文件外，各目录只保留 README.md；Python 代码和 Notebook 由对应负责人自行创建。
+
+```text
+MF703-Project-Ebaybarebay/
+├── README.md                         # 项目总说明、分工、目标与评价公式
+├── requirements.txt                  # 全组共用的 Python 依赖
+├── config.json                       # 数据路径、预测期限、日期划分与随机种子
+├── .gitignore                        # 排除本地环境、缓存与生成结果
+│
+├── data/                             # 数据负责人维护
+│   ├── README.md                     # 数据目录说明
+│   ├── raw/                          # 原始数据，仅做格式转换，保留原样
+│   │   ├── README.md                 # 分片说明与合并读取示例
+│   │   ├── btcusd_1-min_data.part-000.parquet
+│   │   ├── btcusd_1-min_data.part-001.parquet
+│   │   ├── btcusd_1-min_data.part-002.parquet
+│   │   ├── btcusd_1-min_data.part-003.parquet
+│   │   ├── btcusd_1-min_data.part-004.parquet
+│   │   ├── btcusd_1-min_data.part-005.parquet
+│   │   ├── btcusd_1-min_data.part-006.parquet
+│   │   └── btcusd_1-min_data.part-007.parquet
+│   └── processed/                    # 后续放清洗数据、公共特征、目标与样本划分
+│       └── README.md
+│
+├── src/                              # 后续放正式、可复用的 Python 代码
+│   ├── README.md                     # 清洗、特征、基准、评价与回测代码的职责
+│   └── models/                       # 三位模型负责人维护各自模型
+│       └── README.md                  # AR、Ridge、LightGBM 的代码存放说明
+│
+├── notebooks/                        # 后续放个人实验与最终展示 Notebook
+│   └── README.md                     # 负责人自行创建 .ipynb 文件
+│
+└── outputs/                          # 后续放模型运行产生的结果
+    ├── README.md
+    ├── models/                       # 训练模型、预处理器与参数
+    │   └── README.md
+    ├── predictions/                  # 按统一日期和字段保存的样本外预测
+    │   └── README.md
+    ├── tables/                       # 模型比较、特征消融与回测结果表
+    │   └── README.md
+    └── figures/                      # 探索、预测、净值与回撤图
+        └── README.md
+```
+
+**数据与代码如何衔接：**
+
+```text
+data/raw/ 原始分钟数据
+        │ 数据负责人清洗并构造公共特征和目标
+        ▼
+data/processed/ 公共建模数据
+        │ 三位模型负责人读取同一版本
+        ├── AR
+        ├── Ridge
+        └── LightGBM
+                │ 统一目标、日期与预测文件格式
+                ▼
+outputs/predictions/
+        │ 统一评价与回测
+        ├── outputs/tables/  指标及比较表
+        └── outputs/figures/ 结果图表
+```
+
 ## 文件夹用途与分工
 
 | 目录 | 放什么 | 负责人 |
