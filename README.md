@@ -52,11 +52,11 @@ MF703-Project-Ebaybarebay/
 
 ### ① 统一预测任务
 
-令 $t$ 为预测形成时刻，$P_t$ 为此时已完成分钟线的收盘价，预测期限为 $\Delta=15\,\mathrm{min}$：
+令 t 为预测形成时刻，Pₜ 为此时已完成分钟线的收盘价。统一预测期限为十五分钟：
 
 $$
-\boxed{\displaystyle y_t=\ln\!\left(\frac{P_{t+\Delta}}{P_t}\right)}
-\qquad \Delta=15\,\mathrm{min}
+\boxed{\displaystyle y_t=\ln \left(\frac{P_{t+\Delta}}{P_t}\right)}
+\qquad \Delta=15 \mathrm{min}
 $$
 
 | 要素 | 全组约定 |
@@ -71,7 +71,7 @@ $$
 ### ② 统一训练边界
 
 $$
-\underbrace{\mathrm{Train}}_{\mathrm{fit}}\;\longrightarrow\;\underbrace{\mathrm{Validation}}_{\mathrm{select}}\;\longrightarrow\;\underbrace{\mathrm{Test}}_{\mathrm{report}}
+\underbrace{\mathrm{Train}}_{\mathrm{fit}} \longrightarrow \underbrace{\mathrm{Validation}}_{\mathrm{select}} \longrightarrow \underbrace{\mathrm{Test}}_{\mathrm{report}}
 $$
 
 | 环节 | 必须遵守 |
@@ -87,7 +87,7 @@ $$
 
 $$
 \boxed{\mathrm{RMSE}\downarrow\qquad\mathrm{MAE}\downarrow}
-\qquad \hat y_t^{\,\mathrm{baseline}}=0
+\qquad \hat y_t^{ \mathrm{baseline}}=0
 $$
 
 | 交付项 | 全组约定 |
@@ -120,7 +120,7 @@ $$
 ### 预测目标
 
 $$
-y_t=\ln\!\left(\frac{P_{t+15}}{P_t}\right)
+y_t=\ln \left(\frac{P_{t+15}}{P_t}\right)
 $$
 
 ### 评价指标
