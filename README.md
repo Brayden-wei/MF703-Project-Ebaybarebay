@@ -8,7 +8,7 @@
 
 | 需要分享的内容 | 位置与权限 | 当前状态 |
 |---|---|---|
-| GitHub 仓库 | https://github.com/Brayden-wei/MF703-Project-Ebaybarebay；组员需接受 Collaborator 邀请才能直接上传 | 已建立 |
+| GitHub 仓库 | [打开仓库](https://github.com/Brayden-wei/MF703-Project-Ebaybarebay)；组员需接受 Collaborator 邀请才能直接上传 | 已建立 |
 | 原始数据 raw-v1 | 网盘共享链接，允许组员查看和下载 | **待项目负责人上传并填写链接** |
 | 公共处理数据 processed-v1 | 网盘共享链接，数据负责人发布，其他人查看和下载 | **待数据负责人生成并填写链接** |
 
