@@ -1,109 +1,117 @@
 # MF703 BTC 预测项目
 
-使用 BTC 分钟级 OHLCV，研究历史信息对未来十五分钟对数收益率的预测能力，并将预测转换为价格。代码与项目说明由 GitHub 管理，原始数据和公共处理数据通过组内网盘共享。各负责人自行创建代码和 Notebook。
+采用简单协作方式：一人准备公共数据，三人独立完成 AR、Ridge、LightGBM，分别交预测结果，最后用 compare.py 统一比较。下面是组内实验约定，并非教授要求的原文。
 
-## 四人组快速开始
+## 项目目录
 
-**统一方式：GitHub 上传代码，网盘下载数据。** 本次调整只修改说明和未来上传规则，仓库中已跟踪的数据及历史记录暂时保留，不会因 .gitignore 自动消失。
-
-| 需要分享的内容 | 位置与权限 | 当前状态 |
-|---|---|---|
-| GitHub 仓库 | [打开仓库](https://github.com/Brayden-wei/MF703-Project-Ebaybarebay)；组员需接受 Collaborator 邀请才能直接上传 | 已建立 |
-| 原始数据 raw-v1 | 网盘共享链接，允许组员查看和下载 | **待项目负责人上传并填写链接** |
-| 公共处理数据 processed-v1 | 网盘共享链接，数据负责人发布，其他人查看和下载 | **待数据负责人生成并填写链接** |
-
-仓库目前是公开的。若网盘仅供组员使用，请设置“指定人员可访问”，并通过组内聊天发送链接；不要把可直接编辑或访问组内私有资料的链接公开放进 README。无需分享 GitHub 密码、验证码或网盘账号。
-
-### 项目负责人先做什么
-
-1. 在 OneDrive 或 Google Drive 创建 `MF703-data`，其中创建 `raw-v1` 与 `processed-v1`。
-2. 把原始 Parquet 上传到 `raw-v1`，只上传完整单文件或整套八个分片中的一种。
-3. 在 GitHub 的 Settings → Collaborators → Add people 输入组员用户名，邀请其加入；组员需自行接受。
-4. 把仓库链接、网盘下载链接、数据版本和个人负责目录发给组员。
-5. 数据负责人生成公共特征、目标和划分后，发布 `processed-v1` 并附字段说明。新版本使用新文件夹，不覆盖旧版。
-
-### 每位组员第一次如何使用
-
-1. 在 GitHub 点击 Code → Download ZIP，解压为本地项目目录。
-2. 从网盘下载指定版本的原始数据，放入本地 `data/raw/`。
-3. 公共处理数据发布后，下载同一版本到本地 `data/processed/`，避免四个人各用不同数据。
-4. 安装 `requirements.txt` 中的依赖，在本地编写并运行自己负责的代码。
-5. 网盘文件须实际下载到本地；不能仅保留需要联网取回的云端占位文件。
-
-## 项目目录结构
-
-下图展示约定的工作结构。数据下载到每个人的本地目录，后续新增数据不提交 GitHub；已有历史数据暂时保留。
+下图是当前采用的结构。只建立文件夹说明；代码、Notebook 和结果文件由负责人完成后添加。
 
 ```text
 MF703-Project-Ebaybarebay/
-├── README.md                         # 项目总说明、分工、目标与评价公式
-├── requirements.txt                  # 全组共用的 Python 依赖
-├── config.json                       # 数据路径、预测期限、日期划分与随机种子
-├── .gitignore                        # 排除本地环境、缓存与生成结果
-│
-├── data/                             # 数据负责人维护
-│   ├── README.md                     # 数据目录说明
-│   ├── raw/                          # 原始数据，仅做格式转换，保留原样
-│   │   ├── README.md                 # 网盘下载、版本与读取说明
-│   └── processed/                    # 后续放清洗数据、公共特征、目标与样本划分
-│       └── README.md
-│
-├── src/                              # 后续放正式、可复用的 Python 代码
-│   ├── README.md                     # 清洗、特征、基准、评价与回测代码的职责
-│   └── models/                       # 三位模型负责人维护各自模型
-│       └── README.md                  # AR、Ridge、LightGBM 的代码存放说明
-│
-├── notebooks/                        # 后续放个人实验与最终展示 Notebook
-│   └── README.md                     # 负责人自行创建 .ipynb 文件
-│
-└── outputs/                          # 后续放模型运行产生的结果
-    ├── README.md
-    ├── models/                       # 训练模型、预处理器与参数
-    │   └── README.md
-    ├── predictions/                  # 按统一日期和字段保存的样本外预测
-    │   └── README.md
-    ├── tables/                       # 模型比较、特征消融与回测结果表
-    │   └── README.md
-    └── figures/                      # 探索、预测、净值与回撤图
-        └── README.md
+├── README.md
+├── requirements.txt
+├── config.json
+├── data/
+│   ├── raw/                 # 原始 Parquet，网盘下载
+│   └── processed/           # 公共数据、目标、评价时间表，网盘发布
+├── notebooks/
+│   ├── README.md
+│   ├── data/README.md       # 数据负责人：清洗、公共特征及划分
+│   ├── ar/README.md         # AR：自己的 Notebook、辅助代码和方法说明
+│   ├── ridge/README.md      # Ridge：自己的 Notebook、辅助代码和方法说明
+│   └── lightgbm/README.md   # LightGBM：自己的 Notebook、辅助代码和方法说明
+├── results/README.md        # 各模型统一格式的预测 CSV
+├── compare.py               # 待集成人实现：统一评价、记录、绘图
+└── comparison/README.md     # 最后生成的指标表、图和比较说明
 ```
 
-**数据与代码如何衔接：**
+已有 src/、outputs/ 及旧数据分片暂时保留，作为旧结构；本轮任务以本 README 为准，不要求把个人 Notebook 再拆成 src 模块，也不要求保存 pkl。当前尚未实现训练或比较代码。
 
-```text
-data/raw/ 原始分钟数据
-        │ 数据负责人清洗并构造公共特征和目标
-        ▼
-data/processed/ 公共建模数据
-        │ 三位模型负责人读取同一版本
-        ├── AR
-        ├── Ridge
-        └── LightGBM
-                │ 统一目标、日期与预测文件格式
-                ▼
-outputs/predictions/
-        │ 统一评价与回测
-        ├── outputs/tables/  指标及比较表
-        └── outputs/figures/ 结果图表
-```
+## 全组必须统一的内容
 
-## 文件夹用途与分工
+| 项目 | 统一约定 |
+|---|---|
+| 数据 | 同一 raw-v1 和 processed-v1；数据负责人统一发布，不覆盖原始数据 |
+| 预测目标 | 未来 15 分钟的对数收益率，以小数表示，不乘 100 |
+| 价格和时间 | UTC；P_t 是决策时点 t 已完成分钟线的 Close；原始时间戳代表开盘还是收盘由数据负责人核实并在 README 记录，统一转换为可用时刻 |
+| 预测频率 | UTC 每小时 00、15、30、45 分钟形成预测；从 t 预测真实时间 t+15 分钟 |
+| 公共目标 | 数据负责人生成 timestamp、y_true、split 的 evaluation_index.csv；目标必须有真实有效价格，不跨缺口直接移动 15 行 |
+| 数据划分 | 使用下表固定年份，不能随机打乱切分；所有模型使用相同折 |
+| 防止未来信息 | 特征只用 t 时刻及之前已经可用的数据；标准化、填补参数及特征选择只在训练期拟合 |
+| 模型训练 | 只在验证期选参数，测试前用 2017–2023 年重训并冻结；测试期不再调整或重新拟合模型 |
+| 结果 | 按 evaluation_index.csv 的全部规定时点提交，不能自己删除预测困难的样本；缺预测先修复，不能静默取交集 |
+| 评价 | 只使用 RMSE、MAE，越低越好；主要按 RMSE 比较，同时报告 MAE |
+| 基准 | compare.py 同时计算恒预测 0 的基准，不需要单独训练 |
+| 可复现 | 有随机性的模型设 random_state=42；README 记录库版本、最终参数、数据版本和运行顺序 |
 
-| 目录 | 放什么 | 负责人 |
+特征、滞后长度、模型参数、模型专属缺失处理可以各自选择，但必须写清楚。个人修改只保存在自己的文件夹，不覆盖公共数据；不能改变统一目标、评价日期和真实值。不同特征的比较代表完整预测方案的比较，不能只归因于模型种类。
+
+### 固定数据划分
+
+沿用此前约定的时间划分；不增加新的验证流程。
+
+| split | 训练期 | 预测评价期 |
 |---|---|---|
-| `data/` | 数据管理说明 | 数据与特征负责人 |
-| `data/raw/` | 从网盘下载的原始 Parquet；保留原样 | 数据与特征负责人 |
-| `data/processed/` | 清洗数据、公共特征、目标和时间划分 | 数据与特征负责人 |
-| `src/` | 正式的数据处理、基准、统一评价和回测代码 | 数据负责人及组内集成人 |
-| `src/models/` | AR、Ridge、LightGBM 的专属处理、训练和预测代码 | 三位模型负责人 |
-| `notebooks/` | 个人实验及最终展示 Notebook，由负责人自行创建 | 全体成员 |
-| `outputs/` | 生成结果的分类管理说明 | 全体成员 |
-| `outputs/models/` | 模型和训练期拟合的预处理器 | 模型负责人 |
-| `outputs/predictions/` | 按日期对齐的基准及模型预测文件 | 模型负责人 |
-| `outputs/tables/` | 比较、消融、分时期和回测表格 | 集成人 |
-| `outputs/figures/` | 预测、特征重要性、净值和回撤图 | 全体成员 |
+| val2021 | 2017–2020 | 2021 |
+| val2022 | 2017–2021 | 2022 |
+| val2023 | 2017–2022 | 2023 |
+| test | 2017–2023 | 2024 年起至数据最后有效目标 |
 
-每个目录的 README.md 说明具体存放规则。不预建 `.py` 或 `.ipynb`，文件命名和代码实现由负责人安排。公共数据修正由数据负责人统一完成；模型专属标准化、滞后项和特征处理由模型负责人维护，不覆盖原始或公共数据。
+年份均按 UTC，边界为每年 1 月 1 日 00:00。训练样本的目标结束时刻必须早于下一评价期起点。特征可使用评价期起点之前的历史作为预热。数据负责人根据公共数据质量和公共特征预热规则确定评价时间表并冻结；若某个模型仍有预热困难，先协调修订公共时间表，不能单独删测试样本。测试期可以用当时已知的历史价格构造特征，但不以测试标签调参或重训。
+
+## 目标和两个指标
+
+$$
+y_t=\ln\left(\frac{P_{t+15}}{P_t}\right)
+$$
+
+设 N 为同一评价期规定的预测数量，y_i 为公共真实值，hat y_i 为预测值：
+
+$$
+\mathrm{RMSE}=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(\hat y_i-y_i)^2}
+$$
+
+$$
+\mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}|\hat y_i-y_i|
+$$
+
+二者均以小数对数收益率计算。分别报告三折验证、合并验证和最终测试；合并验证须拼接全部验证预测后计算，不能简单平均三个 RMSE。测试结果只用于最终报告。
+
+## 每个人交什么
+
+| 负责人 | 个人工作目录 | 必交内容 |
+|---|---|---|
+| 数据与特征 | notebooks/data/ | 可运行的处理 Notebook 或代码、自己的 README、网盘公共数据及 evaluation_index.csv |
+| AR | notebooks/ar/ | 可运行 Notebook 或代码、自己的 README、results/ar_predictions.csv |
+| Ridge | notebooks/ridge/ | 可运行 Notebook 或代码、自己的 README、results/ridge_predictions.csv |
+| LightGBM | notebooks/lightgbm/ | 可运行 Notebook 或代码、自己的 README、results/lightgbm_predictions.csv |
+| 集成人，可由上述一人兼任 | 根目录及 comparison/ | compare.py、最终指标表、图、比较说明 |
+
+每份个人 README 必须填写：负责人、输入数据版本、清洗/缺失处理、特征与窗口、最终参数及选择理由、训练验证过程、随机种子和依赖、运行步骤、结果文件位置、主要发现。四个目录已经放入对应填写模板，未填写项不代表已经做过实验。
+
+## 统一预测文件
+
+每个模型提交一个 UTF-8 CSV，第一行为固定字段名：
+
+```csv
+timestamp,y_true,y_pred,split
+```
+
+timestamp 使用 ISO 8601 UTC，例如 2024-01-01T00:00:00Z，表示预测形成时刻；不是目标结束时刻。split 仅取 val2021、val2022、val2023、test。y_true、y_pred 均是原始小数对数收益率，不能存价格、百分数或标准化后的值。每行对应一次预测，按时间排序，timestamp 与 split 组合唯一；无空预测、NaN、无穷值。y_true 和日期以公共 evaluation_index.csv 为准；CSV 往返保存应保留足够数值精度。
+
+数据文件超过网页上传限制时，通过网盘交付，results/ 中记录下载地址或组内获取方式、数据版本、文件名；不要截断或删减预测来减小文件。
+
+## 最后如何比较
+
+compare.py 由集成人后续实现，不要求大家各自写评价框架：
+
+1. 读取公共评价时间表及三份 CSV，核对日期、split、真实值、重复行和缺失预测；不一致时停止并列出问题。
+2. 计算各模型和零收益基准的 RMSE、MAE，分折、合并验证、测试分别记录。
+3. 保存 comparison/metrics.csv，字段至少含 model、split、n、rmse、mae、data_version、run_id。
+4. 生成 comparison/metrics.png，以不同子图显示 RMSE、MAE；可补充固定同一时间窗口的真实/预测对数收益率图。
+5. 在 comparison/README.md 记录比较日期、输入文件及各模型提交版本、数据版本、结论。新一轮比较另存新 run_id，不覆盖已有实验记录。
+
+本阶段模型比较只使用上述两个指标；交易回测如课程最终要求需要，另行补充，不能用预测误差直接代表交易收益。
 
 ## 数据获取与读取
 
@@ -137,138 +145,29 @@ df["datetime"] = pd.to_datetime(df["Timestamp"], unit="s", utc=True)
 
 组员记录使用的 raw 与 processed 版本。公共数据由数据负责人统一发布；模型标准化等专属处理放在模型代码中。网盘链接尚未提供，本 README 不代表数据已上传到网盘。
 
-## 预测目标
+## GitHub 和网盘怎么共享
 
-令 $P_t$ 为时点 $t$ 已完成分钟线的收盘价。预测未来十五分钟的对数收益率：
+仓库：[MF703-Project-Ebaybarebay](https://github.com/Brayden-wei/MF703-Project-Ebaybarebay)。
 
-$$
-y_t=\ln\left(\frac{P_{t+15}}{P_t}\right)
-$$
-
-模型输出 $\hat y_t$ 后，转换为预测价格和普通收益率：
-
-$$
-\hat P_{t+15}=P_t\exp(\hat y_t),\qquad
-\hat r_t=\exp(\hat y_t)-1
-$$
-
-对数收益率与普通收益率不同；二者在变化很小时近似相等。模型训练、RMSE、MAE 和 Pearson 均统一使用对数收益率，不能混用。对数收益率没有百分比单位，0.001 在小幅变化下约对应 0.1% 的普通收益率。
-
-每十五分钟形成一次预测。仅使用当时已经完成的数据；按真实时间配对目标，不能跨缺口直接移动十五行。
-
-## 统计评判标准与公式
-
-设 $N$ 为有效样本外预测数，$y_i$ 为真实对数收益率，$\hat y_i$ 为同一时点的预测；$\bar y$ 与 $\bar{\hat y}$ 分别为其均值。所有模型在相同预测日期评价。
-
-### 主要指标 RMSE
-
-$$
-\mathrm{RMSE}=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(\hat y_i-y_i)^2}
-$$
-
-越低越好，0 表示预测完全准确；较大的错误受到更大惩罚。它衡量对数收益率预测误差，不是利润或涨跌准确率。
-
-### 辅助指标 MAE
-
-$$
-\mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}|\hat y_i-y_i|
-$$
-
-越低越好，表示对数收益率的平均绝对误差，帮助识别 RMSE 是否受少量大误差影响。
-
-### 辅助指标 Pearson
-
-$$
-\rho=\frac{\sum_{i=1}^{N}(y_i-\bar y)(\hat y_i-\bar{\hat y})}{\sqrt{\sum_{i=1}^{N}(y_i-\bar y)^2}\sqrt{\sum_{i=1}^{N}(\hat y_i-\bar{\hat y})^2}}
-$$
-
-范围为 −1 至 1，越高表示正向线性关系越强，不保证幅度或方向准确。任一序列为常数时无定义，记 N/A，不记 0。
-
-### 相对基准的误差改善率
-
-$$
-\mathrm{Improvement}=\frac{\mathrm{RMSE}_{baseline}-\mathrm{RMSE}_{model}}{\mathrm{RMSE}_{baseline}}\times100
-$$
-
-改善率按百分数报告，例如数值 5 表示改善 5%。零对数收益率基准恒预测 0，对应未来价格等于当前价格；其 Pearson 为 N/A。另设训练期平均对数收益率基准。改善率大于 0 表示超过基准；基准 RMSE 为 0 时改善率无定义。
-
-## 数据划分与比较规则
-
-| 阶段 | 训练数据 | 评价数据 |
-|---|---|---|
-| 验证一 | 2017–2020 年 | 2021 年 |
-| 验证二 | 2017–2021 年 | 2022 年 |
-| 验证三 | 2017–2022 年 | 2023 年 |
-| 最终测试 | 2017–2023 年重训并冻结 | 2024 年起的有效记录 |
-
-样本起点是研究设计，需根据数据质量说明理由。每折预处理只在训练区拟合；训练标签结束时点必须早于验证起点。使用合并的样本外预测计算开发 RMSE，同时展示逐年表现。测试期不再选特征、调参或选择策略阈值。
-
-模型比较：零收益、历史均值、AR、Ridge、LightGBM。Ridge 和 LightGBM 使用相同公共特征做基础比较；个人专属特征作为扩展实验并明确标记。初始特征建议分为历史收益、趋势与K线形态、成交量与波动率三组，做逐组消融。
-
-统一预测文件字段如下，y_true 和 y_pred 均为对数收益率：
-
-```text
-timestamp,target_end,model,y_true,y_pred,split
-```
-
-## 金融评价
-
-回测采用信号形成后的可执行价格，明确手续费、滑点和仓位规则，收益必须用实际执行区间的普通收益率计算，不直接累乘对数收益率。补充成本后累计收益、Sharpe 和最大回撤，与相同区间的买入并持有比较。
-
-## 组员上传代码的具体步骤
-
-首次上传前，先接受项目负责人发出的 GitHub Collaborator 邀请并登录自己的账号。当前采用最简单的网页上传流程，组员各自维护自己的文件。
-
-| 步骤 | 网页操作 |
+| 内容 | 位置 |
 |---|---|
-| 1 | 打开仓库，先进入文件应保存的目录，例如 `src/models/` |
-| 2 | 点击 Add file → Upload files |
-| 3 | 拖入自己写好的 `.py` 或 `.ipynb` 文件；只上传该目录应有的文件 |
-| 4 | 等待文件上传完成，确认名称与目录正确 |
-| 5 | 填写提交说明，例如 `Add Ridge model and preprocessing` |
-| 6 | 选择 Commit directly to the main branch，点击 Commit changes |
-| 7 | 返回目录，确认文件出现，把本次改动告知组员 |
+| 代码、个人 README、可运行 Notebook | GitHub 对应个人文件夹 |
+| 原始数据 raw-v1 | 网盘，链接待负责人上传后提供 |
+| 公共处理数据 processed-v1 和评价时间表 | 网盘，待数据负责人生成 |
+| 预测 CSV | results/；过大时网盘交付并在 results/ 记录 |
+| 最终小型指标表和图片 | comparison/ |
 
-**示例：** Ridge 负责人进入 `src/models/` 上传 `ridge.py`；实验 Notebook 则另行进入 `notebooks/` 上传。更新同一文件时，在相同目录上传相同文件名。上传前先看最新版本，避免覆盖别人的修改；不要四个人同时修改同一个文件。无需把整个本地项目或 ZIP 当作代码上传。
+负责人通过 Settings → Collaborators → Add people 邀请组员；每人使用自己的账号接受邀请。仓库公开，组内网盘链接可通过群聊发给指定组员，不必公开私有资料访问链接。
 
-| 负责人 | 正式代码位置 | 实验位置 |
-|---|---|---|
-| 数据与特征 | `src/` | `notebooks/` |
-| AR | `src/models/` | `notebooks/` |
-| Ridge | `src/models/` | `notebooks/` |
-| LightGBM | `src/models/` | `notebooks/` |
+首次使用：Code → Download ZIP → 解压 → 网盘下载对应数据到本地 data/ → 安装 requirements.txt 依赖。
 
-原始/处理数据、大模型文件放网盘；代码、配置、说明及需要展示的小型表格和图片放 GitHub。清除 Notebook 中不必要的大型输出。模型预测、特征版本及接口保持前文统一规则。网页单文件上传限 25 MiB，参见 [GitHub 文件上传说明](https://docs.github.com/en/repositories/working-with-files/managing-files/adding-a-file-to-a-repository)。
+上传：进入自己的目录（例如 notebooks/ridge/）→ Add file → Upload files → 拖入 Notebook、README 和辅助代码 → 填提交说明 → Commit directly to the main branch → Commit changes。预测结果另行上传到 results/。同路径同文件名用于更新，先看最新版本，避免覆盖别人修改。网页上传单文件限 25 MiB；.gitignore 不阻止手动网页上传，请自行排除大数据。
 
-建议统一 Python 3.11，安装初始依赖：
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-目前没有完整运行入口，由负责人实现后补充。后续更新代码时保留自己的本地数据；Download ZIP 仍可能包含仓库先前跟踪的旧数据，它不代表最新网盘版本。
-
-## 发给组员的消息模板
-
-```text
-GitHub：https://github.com/Brayden-wei/MF703-Project-Ebaybarebay
-请先接受我发送的 Collaborator 邀请，使用自己的 GitHub 账号。
-
-原始数据链接：[填写指定人员可下载的网盘链接]，版本 raw-v1
-公共处理数据：[生成后填写链接]，版本 processed-v1
-
-下载代码后，原始数据放 data/raw/，处理数据放 data/processed/。
-你的负责内容：[填写分工]
-正式代码上传到：[src/ 或 src/models/]
-个人实验上传到：notebooks/
-
-上传：进入对应目录 → Add file → Upload files → Commit changes。
-数据不要上传 GitHub。公共数据或接口变更先在组内同步。
-```
+Python 建议统一 3.11。有新增依赖时同步 requirements.txt 并在个人 README 记录版本。
 
 ## 参考
 
 - [Ridge 与 LightGBM 基础示例](https://www.kaggle.com/code/cookingfunda/crypto-return-prediction-ridge-lightgbm)
 - [第三名训练方案](https://www.kaggle.com/code/sugghi/training-3rd-place-solution)
 
-只借鉴合适的方法。项目采用自己的对数收益率目标、BTC 数据和只用过去训练的验证；采用公开代码时保留署名与许可说明。
+采用公开代码时保留署名及许可说明。使用自己的 BTC 数据、统一目标和时间划分。
