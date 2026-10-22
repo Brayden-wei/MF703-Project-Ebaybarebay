@@ -3,7 +3,10 @@
     "processed_dir": "data/processed",
     "timezone": "UTC",
     "raw_dir": "data/raw",
-    "raw_glob": "btcusd_1-min_data.part-*.parquet"
+    "raw_glob": "btcusd_1-min_data.part-*.parquet",
+    "raw_path": "data/raw/btcusd_1-min_data.parquet",
+    "raw_source": "team_cloud_storage",
+    "raw_version": "raw-v1"
   },
   "task": {
     "horizon_minutes": 15,
