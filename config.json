@@ -6,7 +6,8 @@
     "raw_glob": "btcusd_1-min_data.part-*.parquet",
     "raw_path": "data/raw/btcusd_1-min_data.parquet",
     "raw_source": "team_cloud_storage",
-    "raw_version": "raw-v1"
+    "raw_version": "raw-v1",
+    "evaluation_index_path": "data/processed/evaluation_index.csv"
   },
   "task": {
     "horizon_minutes": 15,
@@ -25,5 +26,10 @@
     ]
   },
   "random_seed": 42,
-  "output_dir": "outputs"
+  "output_dir": "comparison",
+  "predictions_dir": "results",
+  "metrics": [
+    "rmse",
+    "mae"
+  ]
 }
