@@ -1,10 +1,38 @@
 # MF703 BTC 预测项目
 
-使用 BTC 分钟级 OHLCV，研究历史信息对未来十五分钟对数收益率的预测能力，并将预测转换为价格。当前只提供原始 Parquet 数据、配置和文件夹说明。
+使用 BTC 分钟级 OHLCV，研究历史信息对未来十五分钟对数收益率的预测能力，并将预测转换为价格。代码与项目说明由 GitHub 管理，原始数据和公共处理数据通过组内网盘共享。各负责人自行创建代码和 Notebook。
+
+## 四人组快速开始
+
+**统一方式：GitHub 上传代码，网盘下载数据。** 本次调整只修改说明和未来上传规则，仓库中已跟踪的数据及历史记录暂时保留，不会因 .gitignore 自动消失。
+
+| 需要分享的内容 | 位置与权限 | 当前状态 |
+|---|---|---|
+| GitHub 仓库 | https://github.com/Brayden-wei/MF703-Project-Ebaybarebay；组员需接受 Collaborator 邀请才能直接上传 | 已建立 |
+| 原始数据 raw-v1 | 网盘共享链接，允许组员查看和下载 | **待项目负责人上传并填写链接** |
+| 公共处理数据 processed-v1 | 网盘共享链接，数据负责人发布，其他人查看和下载 | **待数据负责人生成并填写链接** |
+
+仓库目前是公开的。若网盘仅供组员使用，请设置“指定人员可访问”，并通过组内聊天发送链接；不要把可直接编辑或访问组内私有资料的链接公开放进 README。无需分享 GitHub 密码、验证码或网盘账号。
+
+### 项目负责人先做什么
+
+1. 在 OneDrive 或 Google Drive 创建 `MF703-data`，其中创建 `raw-v1` 与 `processed-v1`。
+2. 把原始 Parquet 上传到 `raw-v1`，只上传完整单文件或整套八个分片中的一种。
+3. 在 GitHub 的 Settings → Collaborators → Add people 输入组员用户名，邀请其加入；组员需自行接受。
+4. 把仓库链接、网盘下载链接、数据版本和个人负责目录发给组员。
+5. 数据负责人生成公共特征、目标和划分后，发布 `processed-v1` 并附字段说明。新版本使用新文件夹，不覆盖旧版。
+
+### 每位组员第一次如何使用
+
+1. 在 GitHub 点击 Code → Download ZIP，解压为本地项目目录。
+2. 从网盘下载指定版本的原始数据，放入本地 `data/raw/`。
+3. 公共处理数据发布后，下载同一版本到本地 `data/processed/`，避免四个人各用不同数据。
+4. 安装 `requirements.txt` 中的依赖，在本地编写并运行自己负责的代码。
+5. 网盘文件须实际下载到本地；不能仅保留需要联网取回的云端占位文件。
 
 ## 项目目录结构
 
-下图展示仓库当前结构。除原始数据、配置与依赖文件外，各目录只保留 README.md；Python 代码和 Notebook 由大家自行创建。
+下图展示约定的工作结构。数据下载到每个人的本地目录，后续新增数据不提交 GitHub；已有历史数据暂时保留。
 
 ```text
 MF703-Project-Ebaybarebay/
@@ -16,7 +44,7 @@ MF703-Project-Ebaybarebay/
 ├── data/                             # 数据负责人维护
 │   ├── README.md                     # 数据目录说明
 │   ├── raw/                          # 原始数据，仅做格式转换，保留原样
-│   │   ├── README.md                 # 分片说明与合并读取示例
+│   │   ├── README.md                 # 网盘下载、版本与读取说明
 │   └── processed/                    # 后续放清洗数据、公共特征、目标与样本划分
 │       └── README.md
 │
@@ -64,7 +92,7 @@ outputs/predictions/
 | 目录 | 放什么 | 负责人 |
 |---|---|---|
 | `data/` | 数据管理说明 | 数据与特征负责人 |
-| `data/raw/` | 原始分钟数据的八个 Parquet 分片及读取说明，保留原样 | 数据与特征负责人 |
+| `data/raw/` | 从网盘下载的原始 Parquet；保留原样 | 数据与特征负责人 |
 | `data/processed/` | 清洗数据、公共特征、目标和时间划分 | 数据与特征负责人 |
 | `src/` | 正式的数据处理、基准、统一评价和回测代码 | 数据负责人及组内集成人 |
 | `src/models/` | AR、Ridge、LightGBM 的专属处理、训练和预测代码 | 三位模型负责人 |
@@ -79,20 +107,35 @@ outputs/predictions/
 
 ## 数据获取与读取
 
-仓库 `data/raw/` 已包含 `btcusd_1-min_data.part-000.parquet` 至 `part-007.parquet`，可以随 Code → Download ZIP 一次下载。源文件为 btcusd_1-min_data.csv，共 7,206,877 行，字段为 Timestamp、Open、High、Low、Close、Volume。
+数据使用网盘分发。源 CSV 有 7,206,877 行，字段为 Timestamp、Open、High、Low、Close、Volume。Parquet 转换未清洗、采样或缩减数值精度。
 
-这是格式转换，没有进行清洗、采样、特征计算或精度缩减。原始单文件压缩后仍约 109 MiB，故按原始行序每一百万行分片，最后一片为余下记录；共八片。不要只读取其中一片作为完整数据。
+推荐网盘目录：
+
+```text
+MF703-data/
+├── raw-v1/          # 原始数据，只读下载
+│   └── btcusd_1-min_data.parquet
+└── processed-v1/    # 数据负责人生成后发布
+    ├── 公共处理数据文件
+    └── 数据说明.md  # 字段、时间范围、版本、生成方法
+```
+
+将完整 Parquet 下载到本地 `data/raw/btcusd_1-min_data.parquet`。配置已改为优先约定此单文件路径。若网盘提供的是八个旧分片，可以使用下列第二种读取方式；不要混合单文件与分片，否则会重复数据。
 
 ```python
 from pathlib import Path
 import pandas as pd
 
-# 从项目根目录运行；Notebook 中请先确定项目根路径。
-raw_dir = Path('data/raw')
-parts = sorted(raw_dir.glob('btcusd_1-min_data.part-*.parquet'))
-df = pd.concat([pd.read_parquet(path) for path in parts], ignore_index=True)
-df['datetime'] = pd.to_datetime(df['Timestamp'], unit='s', utc=True)
+# 从项目根目录运行；Notebook 请先确定项目根路径。
+df = pd.read_parquet("data/raw/btcusd_1-min_data.parquet")
+
+# 仅当使用整套八个分片时，改用以下代码：
+# parts = sorted(Path("data/raw").glob("btcusd_1-min_data.part-*.parquet"))
+# df = pd.concat([pd.read_parquet(p) for p in parts], ignore_index=True)
+df["datetime"] = pd.to_datetime(df["Timestamp"], unit="s", utc=True)
 ```
+
+组员记录使用的 raw 与 processed 版本。公共数据由数据负责人统一发布；模型标准化等专属处理放在模型代码中。网盘链接尚未提供，本 README 不代表数据已上传到网盘。
 
 ## 预测目标
 
@@ -172,9 +215,30 @@ timestamp,target_end,model,y_true,y_pred,split
 
 回测采用信号形成后的可执行价格，明确手续费、滑点和仓位规则，收益必须用实际执行区间的普通收益率计算，不直接累乘对数收益率。补充成本后累计收益、Sharpe 和最大回撤，与相同区间的买入并持有比较。
 
-## 组员上传方式
+## 组员上传代码的具体步骤
 
-组员接受仓库 Collaborator 邀请后，进入自己负责的目录，用 Add file → Upload files 上传代码。下载可使用 Code → Download ZIP，数据会随仓库下载。公共配置和接口改动先在组内同步。
+首次上传前，先接受项目负责人发出的 GitHub Collaborator 邀请并登录自己的账号。当前采用最简单的网页上传流程，组员各自维护自己的文件。
+
+| 步骤 | 网页操作 |
+|---|---|
+| 1 | 打开仓库，先进入文件应保存的目录，例如 `src/models/` |
+| 2 | 点击 Add file → Upload files |
+| 3 | 拖入自己写好的 `.py` 或 `.ipynb` 文件；只上传该目录应有的文件 |
+| 4 | 等待文件上传完成，确认名称与目录正确 |
+| 5 | 填写提交说明，例如 `Add Ridge model and preprocessing` |
+| 6 | 选择 Commit directly to the main branch，点击 Commit changes |
+| 7 | 返回目录，确认文件出现，把本次改动告知组员 |
+
+**示例：** Ridge 负责人进入 `src/models/` 上传 `ridge.py`；实验 Notebook 则另行进入 `notebooks/` 上传。更新同一文件时，在相同目录上传相同文件名。上传前先看最新版本，避免覆盖别人的修改；不要四个人同时修改同一个文件。无需把整个本地项目或 ZIP 当作代码上传。
+
+| 负责人 | 正式代码位置 | 实验位置 |
+|---|---|---|
+| 数据与特征 | `src/` | `notebooks/` |
+| AR | `src/models/` | `notebooks/` |
+| Ridge | `src/models/` | `notebooks/` |
+| LightGBM | `src/models/` | `notebooks/` |
+
+原始/处理数据、大模型文件放网盘；代码、配置、说明及需要展示的小型表格和图片放 GitHub。清除 Notebook 中不必要的大型输出。模型预测、特征版本及接口保持前文统一规则。网页单文件上传限 25 MiB，参见 [GitHub 文件上传说明](https://docs.github.com/en/repositories/working-with-files/managing-files/adding-a-file-to-a-repository)。
 
 建议统一 Python 3.11，安装初始依赖：
 
@@ -182,7 +246,25 @@ timestamp,target_end,model,y_true,y_pred,split
 python -m pip install -r requirements.txt
 ```
 
-目前没有完整运行入口，由负责人实现后在本说明补充执行方式。初始依赖版本待实现后统一固定。
+目前没有完整运行入口，由负责人实现后补充。后续更新代码时保留自己的本地数据；Download ZIP 仍可能包含仓库先前跟踪的旧数据，它不代表最新网盘版本。
+
+## 发给组员的消息模板
+
+```text
+GitHub：https://github.com/Brayden-wei/MF703-Project-Ebaybarebay
+请先接受我发送的 Collaborator 邀请，使用自己的 GitHub 账号。
+
+原始数据链接：[填写指定人员可下载的网盘链接]，版本 raw-v1
+公共处理数据：[生成后填写链接]，版本 processed-v1
+
+下载代码后，原始数据放 data/raw/，处理数据放 data/processed/。
+你的负责内容：[填写分工]
+正式代码上传到：[src/ 或 src/models/]
+个人实验上传到：notebooks/
+
+上传：进入对应目录 → Add file → Upload files → Commit changes。
+数据不要上传 GitHub。公共数据或接口变更先在组内同步。
+```
 
 ## 参考
 
