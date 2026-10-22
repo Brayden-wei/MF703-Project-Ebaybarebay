@@ -1,14 +1,7 @@
-# 原始分钟数据
+# 原始数据
 
-存放 btcusd_1-min_data.part-000.parquet 至 part-007.parquet，共八片、7,206,877 行，按原始 CSV 行序划分。转换保留 Timestamp、Open、High、Low、Close、Volume 及全部数值精度，没有清洗或采样。
+从组内网盘的 raw-v1 下载完整 btcusd_1-min_data.parquet，放在本目录。原始 CSV 转换为 Parquet 后保留 7,206,877 行及六个原始字段，不进行清洗或精度缩减。
 
-单文件超过 GitHub 普通文件上限，因此分片存储。下载仓库后按文件名排序合并读取：
+如组内仍使用旧八分片版本，应完整下载 part-000 至 part-007，按文件名排序合并。完整单文件与分片二选一，不能同时合并读取。读取代码与网盘链接状态见根目录 README。
 
-```python
-from pathlib import Path
-import pandas as pd
-parts = sorted(Path("data/raw").glob("btcusd_1-min_data.part-*.parquet"))
-df = pd.concat([pd.read_parquet(p) for p in parts], ignore_index=True)
-```
-
-从项目根目录运行。不要只读一片，也不要将本目录 README 当作数据读取。数据负责人统一处理缺口、零成交量和异常。
+后续原始数据通过网盘发布，不新增到 GitHub；已有已跟踪文件不会被 .gitignore 自动移除。原始数据保留原样，清洗和特征交给数据负责人。
