@@ -44,9 +44,8 @@ MF703-Project-Ebaybarebay/
     └── metrics.png                 # 待生成：指标对比图
 ```
 
-例如，Ridge 负责人需要提交 `notebooks/ridge/README.md` **以及** `ridge.ipynb`（或 `ridge.py`）；只提交 README 不算完成。多份代码须在 README 写清运行顺序。
+例如，Ridge 负责人需要提交 `notebooks/ridge/README.md` **以及** `ridge.ipynb`（或 `ridge.py`）。
 
-已有 src/、outputs/ 及旧数据分片暂时保留，作为旧结构；本轮任务以本 README 为准，不要求把个人 Notebook 再拆成 src 模块，也不要求保存 pkl。当前尚未实现训练或比较代码。
 
 ## 全组必须统一的内容
 
