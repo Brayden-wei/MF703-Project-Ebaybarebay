@@ -4,47 +4,103 @@
 
 ## 项目目录
 
-下图是当前采用的结构。只建立文件夹说明；代码、Notebook 和结果文件由负责人完成后添加。
+下图展示应完成的结构。**每个个人文件夹至少提交一份 README 和一份可运行代码**，代码可用 `.ipynb` 或 `.py`。标注“待添加/待生成”的文件仅为示例，目前尚未创建。
 
 ```text
 MF703-Project-Ebaybarebay/
-├── README.md
-├── requirements.txt
-├── config.json
+├── README.md                       # 全组协作约定
+├── requirements.txt                # 共用依赖
+├── config.json                     # 统一配置
 ├── data/
-│   ├── raw/                 # 原始 Parquet，网盘下载
-│   └── processed/           # 公共数据、目标、评价时间表，网盘发布
+│   ├── raw/                        # 原始数据，从网盘下载
+│   └── processed/                  # 公共数据及评价时间表
 ├── notebooks/
-│   ├── README.md
-│   ├── data/README.md       # 数据负责人：清洗、公共特征及划分
-│   ├── ar/README.md         # AR：自己的 Notebook、辅助代码和方法说明
-│   ├── ridge/README.md      # Ridge：自己的 Notebook、辅助代码和方法说明
-│   └── lightgbm/README.md   # LightGBM：自己的 Notebook、辅助代码和方法说明
-├── results/README.md        # 各模型统一格式的预测 CSV
-├── compare.py               # 待集成人实现：统一评价、记录、绘图
-└── comparison/README.md     # 最后生成的指标表、图和比较说明
+│   ├── README.md                   # 个人工作区总说明
+│   ├── data/
+│   │   ├── README.md               # 清洗、特征与划分、运行方法
+│   │   ├── prepare_data.ipynb   # 待添加：可运行代码，也可用 .py
+│   │   └── *.py                    # 可选：辅助脚本
+│   ├── ar/
+│   │   ├── README.md               # AR 方法与参数、运行方法
+│   │   ├── ar.ipynb             # 待添加：可运行代码，也可用 .py
+│   │   └── *.py                    # 可选：辅助脚本
+│   ├── ridge/
+│   │   ├── README.md               # Ridge 方法与参数、运行方法
+│   │   ├── ridge.ipynb          # 待添加：可运行代码，也可用 .py
+│   │   └── *.py                    # 可选：辅助脚本
+│   └── lightgbm/
+│       ├── README.md               # LightGBM 方法与参数、运行方法
+│       ├── lightgbm.ipynb       # 待添加：可运行代码，也可用 .py
+│       └── *.py                    # 可选：辅助脚本
+├── results/
+│   ├── README.md                   # 格式及版本说明
+│   ├── ar_predictions.csv          # 待添加：AR 预测
+│   ├── ridge_predictions.csv       # 待添加：Ridge 预测
+│   └── lightgbm_predictions.csv    # 待添加：LightGBM 预测
+├── compare.py                      # 待添加：统一评价、记录及绘图
+└── comparison/
+    ├── README.md                   # 比较记录与结论
+    ├── metrics.csv                 # 待生成：RMSE、MAE 比较表
+    └── metrics.png                 # 待生成：指标对比图
 ```
+
+例如，Ridge 负责人需要提交 `notebooks/ridge/README.md` **以及** `ridge.ipynb`（或 `ridge.py`）；只提交 README 不算完成。多份代码须在 README 写清运行顺序。
 
 已有 src/、outputs/ 及旧数据分片暂时保留，作为旧结构；本轮任务以本 README 为准，不要求把个人 Notebook 再拆成 src 模块，也不要求保存 pkl。当前尚未实现训练或比较代码。
 
 ## 全组必须统一的内容
 
-| 项目 | 统一约定 |
-|---|---|
-| 数据 | 同一 raw-v1 和 processed-v1；数据负责人统一发布，不覆盖原始数据 |
-| 预测目标 | 未来 15 分钟的对数收益率，以小数表示，不乘 100 |
-| 价格和时间 | UTC；P_t 是决策时点 t 已完成分钟线的 Close；原始时间戳代表开盘还是收盘由数据负责人核实并在 README 记录，统一转换为可用时刻 |
-| 预测频率 | UTC 每小时 00、15、30、45 分钟形成预测；从 t 预测真实时间 t+15 分钟 |
-| 公共目标 | 数据负责人生成 timestamp、y_true、split 的 evaluation_index.csv；目标必须有真实有效价格，不跨缺口直接移动 15 行 |
-| 数据划分 | 使用下表固定年份，不能随机打乱切分；所有模型使用相同折 |
-| 防止未来信息 | 特征只用 t 时刻及之前已经可用的数据；标准化、填补参数及特征选择只在训练期拟合 |
-| 模型训练 | 只在验证期选参数，测试前用 2017–2023 年重训并冻结；测试期不再调整或重新拟合模型 |
-| 结果 | 按 evaluation_index.csv 的全部规定时点提交，不能自己删除预测困难的样本；缺预测先修复，不能静默取交集 |
-| 评价 | 只使用 RMSE、MAE，越低越好；主要按 RMSE 比较，同时报告 MAE |
-| 基准 | compare.py 同时计算恒预测 0 的基准，不需要单独训练 |
-| 可复现 | 有随机性的模型设 random_state=42；README 记录库版本、最终参数、数据版本和运行顺序 |
+### ① 统一预测任务
 
-特征、滞后长度、模型参数、模型专属缺失处理可以各自选择，但必须写清楚。个人修改只保存在自己的文件夹，不覆盖公共数据；不能改变统一目标、评价日期和真实值。不同特征的比较代表完整预测方案的比较，不能只归因于模型种类。
+令 $t$ 为预测形成时刻，$P_t$ 为此时已完成分钟线的收盘价，预测期限为 $\Delta=15\,\mathrm{min}$：
+
+$$
+\boxed{\displaystyle y_t=\ln\!\left(\frac{P_{t+\Delta}}{P_t}\right)}
+\qquad \Delta=15\,\mathrm{min}
+$$
+
+| 要素 | 全组约定 |
+|:---|:---|
+| 数据版本 | 同一 `raw-v1` 和 `processed-v1`，由数据负责人统一发布 |
+| 时间标准 | 全部使用 **UTC**；数据负责人核实原始时间戳含义，统一转换为数据可用时刻 |
+| 预测频率 | 每小时 **00、15、30、45 分钟**各预测一次 |
+| 目标单位 | **小数对数收益率**，不乘 $100$，不交价格或标准化值 |
+| 公共答案 | 数据负责人发布 `evaluation_index.csv`，统一日期、真实值和 `split` |
+| 缺口处理 | 按真实十五分钟配对，有效价格才能生成目标，不能跨缺口直接移动十五行 |
+
+### ② 统一训练边界
+
+$$
+\underbrace{\mathrm{Train}}_{\mathrm{fit}}\;\longrightarrow\;\underbrace{\mathrm{Validation}}_{\mathrm{select}}\;\longrightarrow\;\underbrace{\mathrm{Test}}_{\mathrm{report}}
+$$
+
+| 环节 | 必须遵守 |
+|:---|:---|
+| 信息范围 | 只使用预测时刻 $t$ 及之前已经可用的数据 |
+| 预处理 | 标准化、填补参数及特征选择只在各折训练期拟合 |
+| 参数选择 | 只根据验证结果选参数，不查看测试表现后修改方案 |
+| 最终训练 | 用 **2017–2023 年**重训并冻结，测试期不再拟合或调参 |
+| 预测样本 | 完整覆盖统一评价时间表，不能自己删除难预测的样本；有缺失先修复，不能静默取交集 |
+| 随机性 | 如适用，设 `random_state=42`，记录依赖及参数版本 |
+
+### ③ 统一结果与比较
+
+$$
+\boxed{\mathrm{RMSE}\downarrow\qquad\mathrm{MAE}\downarrow}
+\qquad \hat y_t^{\,\mathrm{baseline}}=0
+$$
+
+| 交付项 | 全组约定 |
+|:---|:---|
+| 预测 CSV | 固定四列：`timestamp,y_true,y_pred,split` |
+| 评价指标 | **RMSE 为主，MAE 为辅**，二者均越低越好 |
+| 统一比较 | `compare.py` 计算各模型和**零收益基准**的指标、表格及图片 |
+| 实验记录 | 数据版本、代码版本、最终参数、运行方式和实验编号 `run_id` |
+
+> **可以各自决定：** 特征、滞后长度、模型参数和模型专属预处理。  
+> **必须保持一致：** 预测目标、时间划分、评价日期、真实值和结果格式。
+
+个人修改只保存在自己的文件夹，不覆盖公共数据。不同特征的比较代表完整预测方案的比较，不能只归因于模型种类。
 
 ### 固定数据划分
 
@@ -61,21 +117,34 @@ MF703-Project-Ebaybarebay/
 
 ## 目标和两个指标
 
-$$
-y_t=\ln\left(\frac{P_{t+15}}{P_t}\right)
-$$
-
-设 N 为同一评价期规定的预测数量，y_i 为公共真实值，hat y_i 为预测值：
+### 预测目标
 
 $$
-\mathrm{RMSE}=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(\hat y_i-y_i)^2}
+y_t=\ln\!\left(\frac{P_{t+15}}{P_t}\right)
 $$
 
+### 评价指标
+
+| 符号 | 含义 |
+|:---:|:---|
+| $N$ | 同一评价期规定的预测数量 |
+| $y_i$ | 公共数据中的真实对数收益率 |
+| $\hat y_i$ | 模型对同一时点的预测值 |
+| $e_i=\hat y_i-y_i$ | 单次预测误差 |
+
+**RMSE · 均方根误差**：对较大误差惩罚更重，作为主要比较指标。
+
 $$
-\mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}|\hat y_i-y_i|
+\boxed{\displaystyle \mathrm{RMSE}=\sqrt{\frac{1}{N}\sum_{i=1}^{N}e_i^2}}
 $$
 
-二者均以小数对数收益率计算。分别报告三折验证、合并验证和最终测试；合并验证须拼接全部验证预测后计算，不能简单平均三个 RMSE。测试结果只用于最终报告。
+**MAE · 平均绝对误差**：反映每次预测的平均绝对偏差，作为辅助指标。
+
+$$
+\boxed{\displaystyle \mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}\left|e_i\right|}
+$$
+
+两者均以**小数对数收益率**计算，越低越好。分别报告三折验证、合并验证和最终测试；合并验证须拼接全部验证预测后计算，不能简单平均三个 RMSE。测试结果只用于最终报告。
 
 ## 每个人交什么
 
@@ -87,7 +156,19 @@ $$
 | LightGBM | notebooks/lightgbm/ | 可运行 Notebook 或代码、自己的 README、results/lightgbm_predictions.csv |
 | 集成人，可由上述一人兼任 | 根目录及 comparison/ | compare.py、最终指标表、图、比较说明 |
 
-每份个人 README 必须填写：负责人、输入数据版本、清洗/缺失处理、特征与窗口、最终参数及选择理由、训练验证过程、随机种子和依赖、运行步骤、结果文件位置、主要发现。四个目录已经放入对应填写模板，未填写项不代表已经做过实验。
+**每位负责人都要提交“方法说明 + 可运行代码”。** README 按以下清单填写：
+
+| 说明部分 | 需要写清楚 |
+|:---|:---|
+| 基本信息 | 负责人、数据版本、代码入口和实验编号 |
+| 数据处理 | 缺失值、异常值、标准化方法及拟合时间范围 |
+| 特征设计 | 字段、计算公式、滞后长度和滚动窗口 |
+| 参数设置 | 最终参数值、候选范围和选择依据 |
+| 训练验证 | 日期划分、验证过程及防止未来信息的方法 |
+| 如何运行 | Python/依赖版本、执行顺序、输入输出路径 |
+| 实验结果 | 预测文件位置、主要发现和局限 |
+
+四个目录已有填写模板。Notebook 或 Python 脚本由负责人添加，未填写项不代表已经完成实验。
 
 ## 统一预测文件
 
