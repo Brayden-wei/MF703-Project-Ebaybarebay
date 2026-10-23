@@ -28,11 +28,13 @@ alpha、标准化方法、拟合截距、输入特征。
 | 待填写 | 待填写 | 待填写 |
 | random_state（如适用） | 42 | 全组约定 |
 
-记录三折训练验证方法、是否早停、参数选择用哪些验证记录；测试标签不用于选参数。测试前按约定重训并冻结，说明 AR 历史输入更新等如何实现。
+记录三折训练验证方法、是否早停、参数选择用哪些验证记录；测试标签不用于选参数。测试前按约定重训并冻结，如有历史输入逐步更新，说明如何实现。
 
 ## 输出和发现
 
-- 最终预测：results/ridge_predictions.csv，固定字段 timestamp,y_true,y_pred,split。
+- 对外展示的一行成绩：results/ridge_metrics.csv，固定三列 model,rmse,mae；只计算整个统一测试期，model 填 Ridge。
+- 计算用中间文件：results/ridge_predictions.csv，固定四列 timestamp,y_true,y_pred,split；保留全部规定预测供 compare.py 核对和重新计算，不作为最终展示表。
+- 最终主表由 compare.py 统一生成：每行一个模型，列为模型、测试期 RMSE、测试期 MAE、RMSE 排名。
 - run_id、生成日期、对应代码提交版本：待填写。
 - 特征或方法扩展：待填写。
 - 主要发现及局限：待填写；正式 RMSE、MAE 和对比图由 compare.py 统一计算。
