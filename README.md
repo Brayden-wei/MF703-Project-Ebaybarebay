@@ -30,8 +30,8 @@ MF703-Project-Ebaybarebay/
 │       └── lightgbm.ipynb           # 训练与预测代码，也可用 .py
 ├── results/
 │   ├── README.md
-│   ├── ar_metrics.csv              # 一行成绩
-│   ├── ar_predictions.csv          # 计算用中间文件
+│   ├── ar_metrics.csv              # 整个测试期的 RMSE、MAE
+│   ├── ar_predictions.csv          # 每次预测的真实值与预测值
 │   ├── ridge_metrics.csv
 │   ├── ridge_predictions.csv
 │   ├── lightgbm_metrics.csv
@@ -101,22 +101,42 @@ N 是测试期预测总数，yᵢ 是真实对数收益率，ŷᵢ⁽ᵐ⁾ 是�
 
 ## 每个人交什么
 
-| 负责人 | 必交内容 |
+| 负责人 | 交付内容 |
 |---|---|
-| 数据 | `notebooks/data/` 的代码和 README；网盘公共数据及 `evaluation_index.csv` |
-| AR / Ridge / LightGBM | 各自目录的代码和 README；`results/` 下的一行成绩及中间预测文件 |
-| 集成人，可兼任 | `compare.py`；最终比较表、对比图和简短结论 |
+| 数据 | `notebooks/data/` 的代码、README、公共数据和统一评价时间表 |
+| AR / Ridge / LightGBM | 自己的代码、README，以及下面两份 CSV，放入 `results/` |
+| 集成人，可兼任 | `compare.py`、最终模型比较表和对比图 |
 
-**个人 README 只需写清：** 数据版本、处理方法、特征窗口、最终参数及选择依据、运行步骤、结果位置。
+个人 README 写清数据处理、特征、参数及选择依据、运行方法。
 
-| 文件 | 固定列 | 行的含义 |
-|---|---|---|
-| `模型名_metrics.csv` | `model,rmse,mae` | 一行表示这个模型整个测试期的成绩 |
-| `模型名_predictions.csv` | `timestamp,y_true,y_pred,split` | 每十五分钟一行，供统一计算，不作最终展示 |
+### 以 Ridge 为例：交这两份 CSV
 
-中间文件里，timestamp 是 UTC 预测时刻，y_true 是真实对数收益率，y_pred 是预测值，split 按上表填写。数据负责人提供时间、真实值和 split，模型负责人填写预测值，保留数值精度。
+**① `ridge_metrics.csv`：整个测试期的成绩，只有一行。**
 
-`compare.py` 核对日期和真实值后，只用 test 行计算最终分数，加入零收益基准，保存 `comparison/metrics.csv`（列为 `model,rmse,mae,rank`）和 `metrics.png`。再次比较另存日期编号目录，避免覆盖旧结果。
+| model | rmse | mae |
+|---|---:|---:|
+| Ridge | 0.0012 | 0.0008 |
+
+上面数字仅作格式示例。实际填入整个测试期计算出的 RMSE、MAE。
+
+**② `ridge_predictions.csv`：每次预测的明细，用于核对成绩。**
+
+| timestamp | y_true | y_pred | split |
+|---|---:|---:|---|
+| 2024-01-01 00:00 | 0.0010 | 0.0008 | test |
+| 2024-01-01 00:15 | -0.0005 | -0.0002 | test |
+| 2024-01-01 00:30 | 0.0003 | 0.0004 | test |
+| … | … | … | … |
+
+明细数字也仅作格式示例。每十五分钟一行；四列依次是 **UTC 预测时间、真实对数收益率、预测对数收益率、所属阶段**。时间、真实值和阶段由数据负责人提供，你只填写预测值，不删行；收益率保留原始小数精度。
+
+| 你负责的模型 | 需要交的两个文件 |
+|---|---|
+| AR | `ar_metrics.csv`、`ar_predictions.csv` |
+| Ridge | `ridge_metrics.csv`、`ridge_predictions.csv` |
+| LightGBM | `lightgbm_metrics.csv`、`lightgbm_predictions.csv` |
+
+`compare.py` 用明细中 `split=test` 的全部行统一核算，生成前面的四行模型比较表及对比图。验证成绩留作选参数，预测文件过大时走网盘。
 
 ## 数据与代码共享
 
