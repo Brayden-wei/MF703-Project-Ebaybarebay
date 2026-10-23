@@ -43,7 +43,7 @@ MF703-Project-Ebaybarebay/
     └── metrics.png                  # RMSE、MAE 对比图
 ```
 
-可在个人目录添加辅助脚本；运行顺序写入自己的 README。旧 `src/`、`outputs/` 暂时保留，本轮使用上图结构。
+可在个人目录添加辅助脚本；运行顺序写入自己的 README。
 
 ## 全组统一规则
 
