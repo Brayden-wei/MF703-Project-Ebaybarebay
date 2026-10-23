@@ -12,8 +12,8 @@ MF703-Project-Ebaybarebay/
 ├── requirements.txt
 ├── config.json
 ├── data/
-│   ├── raw/                         # 原始 Parquet，网盘下载
-│   └── processed/                   # 公共数据与评价时间表
+│   ├── raw/                         # 原始 csv文件，网盘下载
+│   └── processed/                   # 处理后数据
 ├── notebooks/
 │   ├── README.md
 │   ├── data/
