@@ -10,7 +10,7 @@
 MF703-Project-Ebaybarebay/
 ├── README.md
 ├── requirements.txt
-├── config.json
+├── config.json                      #共用的设置文件
 ├── data/
 │   ├── raw/                         # 原始 csv文件，网盘下载
 │   └── processed/                   # 处理后数据
