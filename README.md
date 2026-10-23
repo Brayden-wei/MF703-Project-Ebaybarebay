@@ -120,7 +120,7 @@ N 是测试期预测总数，yᵢ 是真实对数收益率，ŷᵢ⁽ᵐ⁾ 是�
 
 ## 数据与代码共享
 
-- **数据：** 原始 Parquet 下载至 `data/raw/`，公共数据至 `data/processed/`；网盘链接待负责人提供。大预测文件也可走网盘，在 `results/README.md` 记录获取方式。
-- **下载代码：** GitHub → Code → Download ZIP；安装 `requirements.txt` 依赖，建议 Python 3.11。
+- **数据：** 原始 csv文件 下载至 `data/raw/`，处理后公共数据至 `data/processed/`；网盘链接(https://drive.google.com/drive/folders/1oUc_AD97JhNFmT7GM21hw91WWX0XLKNo?usp=drive_link)。
+- **下载代码：** GitHub → Code → Download ZIP；安装 `requirements.txt` 依赖，Python 3.11 其余环境包后面慢慢补充。
 - **上传代码：** 接受 Collaborator 邀请 → 进入自己的目录 → Add file → Upload files → Commit changes。
-- **组内分享：** 仓库链接、网盘下载链接、数据版本及分工；公共数据或接口变更先同步。
+
