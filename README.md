@@ -34,8 +34,11 @@ MF703-Project-Ebaybarebay/
 │       └── *.py                    # 可选：辅助脚本
 ├── results/
 │   ├── README.md                   # 格式及版本说明
+│   ├── ar_metrics.csv          # 待添加：整个测试期的一行成绩
 │   ├── ar_predictions.csv          # 待添加：AR 预测
+│   ├── ridge_metrics.csv          # 待添加：整个测试期的一行成绩
 │   ├── ridge_predictions.csv       # 待添加：Ridge 预测
+│   ├── lightgbm_metrics.csv          # 待添加：整个测试期的一行成绩
 │   └── lightgbm_predictions.csv    # 待添加：LightGBM 预测
 ├── compare.py                      # 待添加：统一评价、记录及绘图
 └── comparison/
@@ -100,7 +103,8 @@ $$
 
 | 交付项 | 全组约定 |
 |:---|:---|
-| 预测 CSV | 固定四列：`timestamp,y_true,y_pred,split` |
+| 最终展示 | 每个模型一行：整个测试期的 RMSE、MAE；公共代码最后补 RMSE 排名 |
+| 计算用中间文件 | 保留四列逐时预测：`timestamp,y_true,y_pred,split`，用于统一计算和核对 |
 | 评价指标 | **RMSE 为主，MAE 为辅**，二者均越低越好 |
 | 统一比较 | `compare.py` 计算各模型和**零收益基准**的指标、表格及图片 |
 | 实验记录 | 在个人 README 写清使用的数据、参数、运行方式和生成结果的日期 |
@@ -152,16 +156,16 @@ $$
 \boxed{\displaystyle \mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}\left|e_i\right|}
 $$
 
-两者均以**小数对数收益率**计算，越低越好。分别报告三折验证、合并验证和最终测试；合并验证须拼接全部验证预测后计算，不能简单平均三个 RMSE。测试结果只用于最终报告。
+两者均以**小数对数收益率**计算，越低越好。一个模型把整个测试期的所有预测误差汇总后，得到一个 RMSE 和一个 MAE。最终主表只放测试期成绩；三折验证成绩留在个人实验记录中，用于选择特征和参数。
 
 ## 每个人交什么
 
 | 负责人 | 个人工作目录 | 必交内容 |
 |---|---|---|
 | 数据与特征 | notebooks/data/ | 可运行的处理 Notebook 或代码、自己的 README、网盘公共数据及 evaluation_index.csv |
-| AR | notebooks/ar/ | 可运行 Notebook 或代码、自己的 README、results/ar_predictions.csv |
-| Ridge | notebooks/ridge/ | 可运行 Notebook 或代码、自己的 README、results/ridge_predictions.csv |
-| LightGBM | notebooks/lightgbm/ | 可运行 Notebook 或代码、自己的 README、results/lightgbm_predictions.csv |
+| AR | notebooks/ar/ | 可运行代码、个人 README、ar_metrics.csv 一行成绩及 ar_predictions.csv 中间文件 |
+| Ridge | notebooks/ridge/ | 可运行代码、个人 README、ridge_metrics.csv 一行成绩及 ridge_predictions.csv 中间文件 |
+| LightGBM | notebooks/lightgbm/ | 可运行代码、个人 README、lightgbm_metrics.csv 一行成绩及 lightgbm_predictions.csv 中间文件 |
 | 集成人，可由上述一人兼任 | 根目录及 comparison/ | compare.py、最终指标表、图、比较说明 |
 
 **每位负责人都要提交“方法说明 + 可运行代码”。** README 按以下清单填写：
@@ -178,63 +182,72 @@ $$
 
 四个目录已有填写模板。Notebook 或 Python 脚本由负责人添加，未填写项不代表已经完成实验。
 
-## 每个模型要交的结果表
+## 每个模型交什么结果
 
-**每个模型交一个 CSV 表格。一行就是一次预测，一共固定四列。** CSV 可以用 Excel 打开，不需要另做复杂文件。
+**对外展示的是一行模型成绩；逐时预测文件是供代码计算和核对的中间数据。** 两者都保留，但用途不同。
 
-| 列名，第一行照此填写 | 这一列放什么 | 谁来提供 |
+### 1. 模型成绩表：一行就够
+
+例如 Ridge 负责人交 `results/ridge_metrics.csv`，列名固定为 `model,rmse,mae`：
+
+| model（模型） | rmse（整个测试期） | mae（整个测试期） |
+|---|---:|---:|
+| Ridge | 待计算 | 待计算 |
+
+AR 和 LightGBM 分别交 `ar_metrics.csv`、`lightgbm_metrics.csv`，也是各一行，把模型名称换成自己的即可。这里填实际计算得到的数字；“待计算”只表示目前还没有实验结果。个人不填写排名，最后由公共比较代码统一排名。
+
+RMSE、MAE 按根目录公式，对整个测试期全部规定预测一起计算。在个人 README 写明测试起止日期、样本数、数据版本及参数。验证期用于选参数，成绩可以另记在 Notebook 中。
+
+### 2. 逐时预测文件：供统一计算，不是最终展示表
+
+每位负责人同时保留对应的 `*_predictions.csv`。只需要四列：
+
+| 列名 | 简单说明 |
+|---|---|
+| `timestamp` | 哪个时刻做出的预测，使用 UTC，例如 `2024-01-01 00:00` |
+| `y_true` | 接下来十五分钟实际发生的对数收益率 |
+| `y_pred` | 你的模型预测的这十五分钟对数收益率 |
+| `split` | 这行属于 `val2021`、`val2022`、`val2023` 还是 `test` |
+
+每十五分钟一行。数据负责人先给大家统一的时间、真实值和所属阶段，模型负责人加上自己的预测值即可。不要改真实值、随意删行或填价格/百分数；预测用小数对数收益率，并保留数值精度。最终比较程序只用其中 `split=test` 的全部行计算主表；验证行保留供核对。
+
+| 模型 | 展示成绩，一行 | 计算用的逐时预测，中间文件 |
 |---|---|---|
-| `timestamp` | 做出预测的时间，统一用 UTC，格式如 `2024-01-01 00:00` | 数据负责人提供，大家保留 |
-| `y_true` | 从这个时刻到十五分钟后，实际发生的对数收益率 | 数据负责人提供，大家保留 |
-| `y_pred` | 你的模型预测的这十五分钟对数收益率 | 每位模型负责人自己计算 |
-| `split` | 这行属于哪一段：`val2021`、`val2022`、`val2023` 或 `test` | 数据负责人提供，大家保留 |
+| AR | `results/ar_metrics.csv` | `results/ar_predictions.csv` |
+| Ridge | `results/ridge_metrics.csv` | `results/ridge_predictions.csv` |
+| LightGBM | `results/lightgbm_metrics.csv` | `results/lightgbm_predictions.csv` |
 
-**例如，Ridge 的结果表如下。数字只是格式示例，不是真实实验结果：**
+逐时预测过大时，完整文件放网盘，在 `results/README.md` 记录文件名和组内获取方式，不要删掉部分预测来缩小文件。
 
-| timestamp | y_true | y_pred | split |
-|---|---:|---:|---|
-| 2024-01-01 00:00 | 0.0010 | 0.0008 | test |
-| 2024-01-01 00:15 | -0.0005 | -0.0002 | test |
-| 2024-01-01 00:30 | 0.0003 | 0.0004 | test |
-| … | … | … | … |
+## 最终展示：每行一个模型
 
-- 第一行：00:00 时预测 00:00–00:15 的对数收益率。
-- 第二行：00:15 时预测 00:15–00:30 的对数收益率。
-- 后面照这个方式，每十五分钟一行。所有规定的验证和测试时点都要有结果。
-- 收益率写小数，例如 `0.0010`，不要写成价格、百分数或标准化后的数字。
+**最终报告只展示整个测试期的成绩。每个模型只有一个 RMSE、一个 MAE，不按时间点逐行展示。** 三个模型和零收益基准必须使用相同的测试日期、相同的真实值和相同的对数收益率单位。
 
-**最简单的交付办法：** 数据负责人先给大家一份有 `timestamp、y_true、split` 的表，每位模型负责人加上自己的 `y_pred` 列，再按上面的四列顺序保存。时间、真实值和所属阶段不要改，不要随意删行；预测没算出的行先修好再提交。保存时保留数值精度，不要只保留示例中的四位小数。
+| 模型 | 测试期 RMSE ↓ | 测试期 MAE ↓ | RMSE 排名 |
+|---|---:|---:|---:|
+| 零收益基准：始终预测收益率为 0 | 待计算 | 待计算 | 待计算 |
+| AR | 待计算 | 待计算 | 待计算 |
+| Ridge | 待计算 | 待计算 | 待计算 |
+| LightGBM | 待计算 | 待计算 | 待计算 |
 
-| 模型 | 保存的文件 |
+**表格共四行结果，不含表头；每行代表整个测试期的一种模型或基准。** RMSE 越低，名次越靠前；相同 RMSE 可并列。MAE 辅助判断平均误差，不与 RMSE 相加成一个分数。
+
+| 指标 | 判断什么 | 如何使用 |
+|---|---|---|
+| RMSE，主要指标 | 汇总整个测试期的预测误差，特别惩罚较大的错误 | 越低越好，用它排名 |
+| MAE，辅助指标 | 整个测试期每次预测平均偏差多大 | 越低越好，辅助解释模型表现 |
+
+两个指标都由整个测试期所有预测误差一起计算。不是只抽几个时间点，也不是把逐月或逐年的 RMSE 简单平均。零收益基准用来判断训练出来的模型是否比直接猜“未来价格不变”更准确。
+
+集成人后续实现 `compare.py`：读取三份逐时预测文件，检查日期和真实值一致，统一计算测试期 RMSE、MAE，加入零收益基准，生成上面的表格并按 RMSE 排名。个人汇总表可先用于展示，最后成绩以统一核算结果为准。
+
+| 最终文件 | 内容 |
 |---|---|
-| AR | `results/ar_predictions.csv` |
-| Ridge | `results/ridge_predictions.csv` |
-| LightGBM | `results/lightgbm_predictions.csv` |
+| `comparison/metrics.csv` | 四列 `model,rmse,mae,rank`；四行结果，与上表对应，全部来自同一测试期 |
+| `comparison/metrics.png` | 两个子图，分别比较四种模型/基准的测试期 RMSE 和 MAE |
+| `comparison/README.md` | 测试起止日期、样本数、数据版本、输入预测文件、比较日期和主要结论 |
 
-文件过大不能传 GitHub 时，完整文件放网盘，在 `results/README.md` 记下文件名和组内获取方式，不要删掉部分预测来缩小文件。
-
-## 最后统一比较什么
-
-集成人写一个 `compare.py`，读取三份结果表，检查大家的时间和真实值是否一样，再计算 RMSE、MAE。每个人不必再写一套比较程序。
-
-**最终比较表固定四列：模型、评价阶段、RMSE、MAE。每行是一种模型在某个阶段的成绩。** 例如最终测试部分如下：
-
-| model（模型） | split（评价阶段） | rmse | mae |
-|---|---|---:|---:|
-| 零收益基准，始终预测 0 | test | 待计算 | 待计算 |
-| AR | test | 待计算 | 待计算 |
-| Ridge | test | 待计算 | 待计算 |
-| LightGBM | test | 待计算 | 待计算 |
-
-验证部分按同样格式填写：`split` 分别为 `val2021`、`val2022`、`val2023`、`validation_all`（三段验证结果合在一起）。连同 `test`，共五个阶段；四种模型/基准各一行，因此完整比较表共 **20 行结果，不含表头**。RMSE 和 MAE 均越低越好。
-
-| 最后保存什么 | 文件位置 |
-|---|---|
-| 上面的比较表 | `comparison/metrics.csv` |
-| RMSE、MAE 对比图，各画一个子图 | `comparison/metrics.png` |
-| 用了哪些结果文件、比较日期和主要结论 | `comparison/README.md` |
-
-再次比较时另建一个以日期和编号命名的文件夹保存，避免覆盖旧结果。当前只规定这两个预测指标；如课程还需要交易回测，另行补充。
+验证期成绩保留在个人 Notebook 或 README，供选特征和参数；最终主表不混入验证期成绩。先在验证期确定方案，再在测试期评价，不能根据测试成绩反复调参。此处排名描述本次测试期的预测误差，不等同于交易盈利能力。再次比较时另建日期编号目录，保留旧结果。
 
 ## 数据获取与读取
 
